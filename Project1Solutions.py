@@ -129,7 +129,7 @@ class socket:
                 syn_ack_packet = struct.unpack(PACKET_HEADER_FORMAT, syn_ack_packet)
                 # if it receives a reset marked flag for any reason, abort the handshake
                 if syn_ack_packet[PACKET_FLAG_INDEX] == SOCK352_RESET:
-                    print "Connection was reset by the server"
+                    print("Connection was reset by the server")
                     return
 
                 # if it receives a packet, and it is SYN/ACK, we are done
@@ -254,7 +254,8 @@ class socket:
             self.last_data_packet_acked = None
         # in the case that it cannot close, it prints out that it's still waiting for data
         else:
-            print "Failed to close the connection!\n" \
+            print
+            "Failed to close the connection!\n" \
                   "Still waiting for data transmission/reception to finish"
 
     # method responsible for breaking apart the buffer into chunks of maximum payload length
@@ -347,7 +348,7 @@ class socket:
                 # was received by this sender and thus the connection was closed
                 # by the receiver but it happened between this sender's checking
                 # of that connection close condition
-                except syssock.error, error:
+                except syssock.error as error:
                     if error.errno != 111:
                         raise error
                     self.can_close = True
@@ -392,7 +393,7 @@ class socket:
             # anticipating an ACK for a packet it sent out, which hasn't timed out
             # but the server has closed the connection since it finished receiving
             # the data and an ACK is already on its way to this sender
-            except syssock.error, error:
+            except syssock.error as error:
                 if error.errno != 111:
                     raise error
                 self.can_close = True

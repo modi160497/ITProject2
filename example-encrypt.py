@@ -43,7 +43,8 @@ encoded_public_key = skbob.public_key.encode(encoder = nacl.encoding.HexEncoder)
 try: 
     decoded_public_key = nacl.public.PublicKey(encoded_public_key, encoder = nacl.encoding.HexEncoder)
 except TypeError:
-    print "Error decoding the key"
+    print
+    "Error decoding the key"
 
 # Alice does the same and then Alice and Bob exchange public keys
 skalice = PrivateKey.generate()

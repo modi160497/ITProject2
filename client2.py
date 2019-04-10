@@ -7,9 +7,9 @@
 
 import argparse
 import time
-import struct 
-import md5
-import os 
+import struct
+#import md5
+import os
 import sock352
 
 def main():
@@ -25,6 +25,7 @@ def main():
     # get the arguments into local variables 
     args = vars(parser.parse_args())
     filename = args['filename']
+    print("file name : " + str(filename))
     destination = args['destination']
     udpportRx = args['udpportRx']
     keyfilename = args['keyfile']
@@ -44,10 +45,11 @@ def main():
     if (filename):
         try: 
             filesize = os.path.getsize(filename)
+            #print("filesize : " + str(filesizeb))
             fd = open(filename, "rb")
             usefile = True
         except:
-            print ( "error opening file: %s" % (filename))
+            print ( "error opening file initially: %s" % (filename))
             exit(-1)
     else:
         pass 
