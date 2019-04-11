@@ -112,22 +112,24 @@ def readKeyChain(filename):
                 # hash, we may have a valid host/key pair in the keychain
                 if ( (len(words) >= 4) and (words[0].find("#") == -1)):
                     host = words[1]
-                    print("host: " + str(host))
+                    #print("host: " + str(host))
                     port = words[2]
-                    print("port: " + str(port))
+                    #print("port: " + str(port))
                     keyInHex = words[3]
                     if (words[0] == "private"):
                         privateKeysHex[(host,port)] = keyInHex
-                        print("key is private: " + str(keyInHex))
+                       # print("key is private: " + str(keyInHex))
                         privateKeys[(host,port)] = nacl.public.PrivateKey(keyInHex, nacl.encoding.HexEncoder)
                     elif (words[0] == "public"):
                         publicKeysHex[(host,port)] = keyInHex
-                        print("key is public: " + str(keyInHex))
+                        #print("key is public: " + str(keyInHex))
                         publicKeys[(host,port)] = nacl.public.PublicKey(keyInHex, nacl.encoding.HexEncoder)
         except Exception as e:
             print ( "error: opening keychain file: %s %s" % (filename,repr(e)))
     else:
             print ("error: No filename presented")             
+
+    print(publicKeysHex)
 
     return (publicKeys,privateKeys)
 
@@ -172,6 +174,8 @@ class socket:
         # declares the last packet that was acked (for the sender only)
         self.last_data_packet_acked = None
 
+        self.encrypt = False
+
         return 
         
     def bind(self,address):
@@ -189,13 +193,15 @@ class socket:
         if (len(args) >= 2):
             if (args[1] == ENCRYPT):
                 self.encrypt = True
-                
+                print("connection is encrypted")
+
         # your code goes here
 
         address = args[0]
 
         # sets the send address to the tuple (address ip, transmit port)
         self.send_address = (address[0], sock352portTx)
+        print("send address is: ", self.send_address)
 
         # binds the client on the receiving port
         self.socket.bind((address[0], sock352portRx))
@@ -206,8 +212,15 @@ class socket:
             return
 
         # Step 1: Request to connect to the server by setting the SYN flag
+
+        #if encryption argument passed, set the option bit and syn flag
+        if(self.encrypt==True):
+            flags = SOCK352_SYN | SOCK352_HAS_OPT
+        else:
+            flags = SOCK352_SYN
+
         # first the packet is created using createPacket and passing in the apprpriate variables
-        syn_packet = self.createPacket(flags=SOCK352_SYN, sequence_no=self.sequence_no)
+        syn_packet = self.createPacket(flags, sequence_no=self.sequence_no)
         self.socket.sendto(syn_packet, self.send_address)
         # increments the sequence since it was consumed in creation of the SYN packet
         self.sequence_no += 1
@@ -250,6 +263,13 @@ class socket:
         # sets the connected boolean to be true
         self.is_connected = True
 
+        #after the client is connected, look up public key of the server to create nonce and box
+        port = self.send_address[1]
+        host = self.send_address[0]
+        print((host,port))
+        serverpublickey = publicKeysHex.get((host,port))
+        print(serverpublickey)
+
         # sends the ack packet to the server, as it assumes it's connected now
         self.socket.sendto(ack_packet, self.send_address)
         print("Client is now connected to the server at %s:%s" % (self.send_address[0], self.send_address[1]))
@@ -272,6 +292,8 @@ class socket:
             print(CONNECTION_ALREADY_ESTABLISHED_MESSAGE)
             return
 
+        print("host name is: ", self.socket.getsockname())
+
         # Keeps trying to receive the request to connect from a potential client until we get a connection request
         got_connection_request = False
         while not got_connection_request:
@@ -281,7 +303,7 @@ class socket:
                 syn_packet = struct.unpack(PACKET_HEADER_FORMAT, syn_packet)
 
                 # if the received packet is not a SYN packet, it ignores the packet
-                if syn_packet[PACKET_FLAG_INDEX] == SOCK352_SYN:
+                if (syn_packet[PACKET_FLAG_INDEX] == SOCK352_SYN) or (syn_packet[PACKET_FLAG_INDEX] == SOCK352_SYN | SOCK352_HAS_OPT):
                     got_connection_request = True
             # if the receive times out while receiving a SYN packet, it tries to listen again
             except syssock.timeout:
@@ -290,6 +312,7 @@ class socket:
         # Step 2: Send a SYN/ACK packet for the 3-way handshake
         # creates the flags bit to be the bit-wise OR of SYN/ACK
         flags = SOCK352_SYN | SOCK352_ACK
+        print("ack and syn flag:",bin(flags))
         # creates the SYN/ACK packet to ACK the connection request from client
         # and sends the SYN to establish the connection from this end
         syn_ack_packet = self.createPacket(flags=flags,
@@ -361,7 +384,7 @@ class socket:
     def create_data_packets(self, buffer):
 
         # calculates the total packets needed to transmit the entire buffer
-        total_packets = len(buffer) / MAXIMUM_PAYLOAD_SIZE
+        total_packets = (int) (len(buffer) / MAXIMUM_PAYLOAD_SIZE)
 
         # if the length of the buffer is not divisible by the maximum payload size,
         # that means an extra packet will need to be sent to transmit the left over data
