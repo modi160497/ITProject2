@@ -115,6 +115,7 @@ def readKeyChain(filename):
                     #print("host: " + str(host))
                     port = words[2]
                     #print("port: " + str(port))
+
                     keyInHex = words[3]
                     if (words[0] == "private"):
                         privateKeysHex[(host,port)] = keyInHex
@@ -264,11 +265,14 @@ class socket:
         self.is_connected = True
 
         #after the client is connected, look up public key of the server to create nonce and box
-        port = self.send_address[1]
+        port = str(self.send_address[1])
         host = self.send_address[0]
-        print((host,port))
         serverpublickey = publicKeysHex.get((host,port))
+        serverprivatekey = privateKeysHex.get((host,port))
         print(serverpublickey)
+        print(serverprivatekey)
+
+        bob_box = Box(skbob, pkalice)
 
         # sends the ack packet to the server, as it assumes it's connected now
         self.socket.sendto(ack_packet, self.send_address)
