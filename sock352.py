@@ -280,8 +280,8 @@ class socket:
         #print(serverpublickey)
         #print(clientprivatekey)
 
-        global encrypt_box
-        encrypt_box = Box(clientprivatekey, serverpublickey)
+
+        self.encrypt_box = Box(clientprivatekey, serverpublickey)
 
         # sends the ack packet to the server, as it assumes it's connected now
         self.socket.sendto(ack_packet, self.send_address)
