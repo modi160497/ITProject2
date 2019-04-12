@@ -312,11 +312,19 @@ class socket:
                 syn_packet = struct.unpack(PACKET_HEADER_FORMAT, syn_packet)
 
                 # if the received packet is not a SYN packet, it ignores the packet
-                if (syn_packet[PACKET_FLAG_INDEX] == SOCK352_SYN) or (syn_packet[PACKET_FLAG_INDEX] == SOCK352_SYN | SOCK352_HAS_OPT):
+                if (syn_packet[PACKET_FLAG_INDEX] == SOCK352_SYN):
                     got_connection_request = True
+                    self.encrypt = False
+                if (syn_packet[PACKET_FLAG_INDEX] == SOCK352_SYN | SOCK352_HAS_OPT):
+                    got_connection_request = True
+
+
             # if the receive times out while receiving a SYN packet, it tries to listen again
             except syssock.timeout:
                 pass
+              
+        tup1=('localhost',str(addr[1]))
+        tup2=('localhost',str(self.socket.getsockname()[1]))
 
         # Step 2: Send a SYN/ACK packet for the 3-way handshake
         # creates the flags bit to be the bit-wise OR of SYN/ACK
@@ -359,6 +367,9 @@ class socket:
         self.is_connected = True
 
         print("Server is now connected to the client at %s:%s" % (self.send_address[0], self.send_address[1]))
+        
+        if (self.encrypt == True ):
+            self.box=Box(privateKeys.get(tup2), publicKeys.get(tup1))
 
         return self, addr
 
