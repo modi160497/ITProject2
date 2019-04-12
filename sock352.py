@@ -112,11 +112,13 @@ def readKeyChain(filename):
                 # hash, we may have a valid host/key pair in the keychain
                 if ( (len(words) >= 4) and (words[0].find("#") == -1)):
                     host = words[1]
-                    #print("host: " + str(host))
+                    print("host: " + str(host))
                     port = words[2]
-                    #print("port: " + str(port))
+                    print("port: " + str(port))
 
                     keyInHex = words[3]
+                    print("key: " + keyInHex)
+
                     if (words[0] == "private"):
                         privateKeysHex[(host,port)] = keyInHex
                        # print("key is private: " + str(keyInHex))
@@ -131,6 +133,7 @@ def readKeyChain(filename):
             print ("error: No filename presented")             
 
     print(publicKeysHex)
+    print(privateKeysHex)
 
     return (publicKeys,privateKeys)
 
@@ -176,6 +179,8 @@ class socket:
         self.last_data_packet_acked = None
 
         self.encrypt = False
+
+        self.encrypt_box = None
 
         return 
         
@@ -264,15 +269,15 @@ class socket:
         # sets the connected boolean to be true
         self.is_connected = True
 
-        #after the client is connected, look up public key of the server to create nonce and box
+        #after the client is connected, look up private key of client and public key of server
         port = str(self.send_address[1])
         host = self.send_address[0]
         serverpublickey = publicKeysHex.get((host,port))
-        serverprivatekey = privateKeysHex.get((host,port))
+        clientprivatekey = privateKeysHex.get(("*","*"))
         print(serverpublickey)
-        print(serverprivatekey)
+        print(clientprivatekey)
 
-        bob_box = Box(skbob, pkalice)
+        self.encrypt_box = Box(clientprivatekey, serverpublickey)
 
         # sends the ack packet to the server, as it assumes it's connected now
         self.socket.sendto(ack_packet, self.send_address)
