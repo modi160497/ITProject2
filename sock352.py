@@ -323,8 +323,8 @@ class socket:
             except syssock.timeout:
                 pass
               
-        tup1=('localhost',str(addr[1]))
-        tup2=('localhost',str(self.socket.getsockname()[1]))
+        tup1=(str(addr[0]),str(addr[1]))
+        tup2=('**',str(self.socket.getsockname()[1]))
 
         # Step 2: Send a SYN/ACK packet for the 3-way handshake
         # creates the flags bit to be the bit-wise OR of SYN/ACK
