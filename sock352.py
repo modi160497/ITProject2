@@ -71,6 +71,7 @@ PACKET_FLAG_INDEX = 1
 PACKET_SEQUENCE_NO_INDEX = 8
 PACKET_ACK_NO_INDEX = 9
 
+
 #String message to print out that a connection has been already established
 CONNECTION_ALREADY_ESTABLISHED_MESSAGE = "This socket supports a maximum of one connection\n" \
                                  "And a connection is already established"
@@ -182,6 +183,8 @@ class socket:
 
         self.encrypt_box = None
 
+        self.nonce = None
+
         return 
         
     def bind(self,address):
@@ -277,7 +280,8 @@ class socket:
         #print(serverpublickey)
         #print(clientprivatekey)
 
-        self.encrypt_box = Box(clientprivatekey, serverpublickey)
+        global encrypt_box
+        encrypt_box = Box(clientprivatekey, serverpublickey)
 
         # sends the ack packet to the server, as it assumes it's connected now
         self.socket.sendto(ack_packet, self.send_address)
@@ -435,6 +439,7 @@ class socket:
             # attaches the payload length of buffer to the end of the header to finish constructing the packet
             #encrypt each packet
             message = buffer[MAXIMUM_PAYLOAD_SIZE * i: MAXIMUM_PAYLOAD_SIZE * i + payload_len]
+            print("message is :", message)
             encrypt_packet = self.encrypt_box.encrypt(message)
             self.data_packets.append(new_packet + encrypt_packet)
         return total_packets
