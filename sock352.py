@@ -272,10 +272,10 @@ class socket:
         #after the client is connected, look up private key of client and public key of server
         port = str(self.send_address[1])
         host = self.send_address[0]
-        serverpublickey = publicKeysHex.get((host,port))
-        clientprivatekey = privateKeysHex.get(("*","*"))
-        print(serverpublickey)
-        print(clientprivatekey)
+        serverpublickey = publicKeys.get((host,port))
+        clientprivatekey = privateKeys.get(("*","*"))
+        #print(serverpublickey)
+        #print(clientprivatekey)
 
         self.encrypt_box = Box(clientprivatekey, serverpublickey)
 
@@ -422,8 +422,10 @@ class socket:
             self.ack_no += 1
 
             # attaches the payload length of buffer to the end of the header to finish constructing the packet
-            self.data_packets.append(new_packet + buffer[MAXIMUM_PAYLOAD_SIZE * i:
-                                                         MAXIMUM_PAYLOAD_SIZE * i + payload_len])
+            #encrypt each packet
+            message = buffer[MAXIMUM_PAYLOAD_SIZE * i: MAXIMUM_PAYLOAD_SIZE * i + payload_len]
+            encrypt_packet = self.encrypt_box.encrypt(message)
+            self.data_packets.append(new_packet + encrypt_packet)
         return total_packets
 
     def send(self,buffer):
