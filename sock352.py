@@ -183,8 +183,6 @@ class socket:
 
         self.encrypt_box = None
 
-        self.nonce = None
-
         return 
         
     def bind(self,address):
@@ -274,7 +272,7 @@ class socket:
 
         #after the client is connected, look up private key of client and public key of server
         port = str(self.send_address[1])
-        host = self.send_address[0]
+        host = str(self.send_address[0])
 
 
         serverpublickey = publicKeys.get((host,port))
@@ -325,6 +323,7 @@ class socket:
                     self.encrypt = False
                 if (syn_packet[PACKET_FLAG_INDEX] == SOCK352_SYN | SOCK352_HAS_OPT):
                     got_connection_request = True
+                    self.encrypt = True
 
 
             # if the receive times out while receiving a SYN packet, it tries to listen again
@@ -377,7 +376,7 @@ class socket:
         print("Server is now connected to the client at %s:%s" % (self.send_address[0], self.send_address[1]))
         
         if (self.encrypt == True ):
-            self.box=Box(privateKeys.get(tup2), publicKeys.get(tup1))
+            self.encrypt_box =Box(privateKeys.get(tup2), publicKeys.get(tup1))
 
         return self, addr
 
@@ -441,12 +440,16 @@ class socket:
             self.ack_no += 1
 
             # attaches the payload length of buffer to the end of the header to finish constructing the packet
-            #encrypt each packet
             message = buffer[MAXIMUM_PAYLOAD_SIZE * i: MAXIMUM_PAYLOAD_SIZE * i + payload_len]
-            print("message is :", message)
-            print(type(self.encrypt_box))
-            encrypt_packet = self.encrypt_box.encrypt(message)
-            self.data_packets.append(new_packet + encrypt_packet)
+            #encrypt each packet if encryption is true
+            if(self.encrypt):
+                print("message is :", message)
+                print(type(self.encrypt_box))
+                encrypt_packet = self.encrypt_box.encrypt(message)
+                self.data_packets.append(new_packet + encrypt_packet)
+            else:
+                self.data_packets.append(new_packet + message)
+
         return total_packets
 
     def send(self,buffer):
