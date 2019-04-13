@@ -451,12 +451,6 @@ class socket:
             else:
                 self.data_packets.append(new_packet + message)
 
-
-            print("message is :", message)
-            print(type(self.encrypt_box))
-            encrypt_packet = self.box.encrypt(message)
-            self.data_packets.append(new_packet + encrypt_packet)
-
         return total_packets
 
     def send(self,buffer):
