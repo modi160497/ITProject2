@@ -441,6 +441,7 @@ class socket:
 
             # attaches the payload length of buffer to the end of the header to finish constructing the packet
             message = buffer[MAXIMUM_PAYLOAD_SIZE * i: MAXIMUM_PAYLOAD_SIZE * i + payload_len]
+<<<<<<< HEAD
             #encrypt each packet if encryption is true
             if(self.encrypt):
                 print("message is :", message)
@@ -450,6 +451,12 @@ class socket:
             else:
                 self.data_packets.append(new_packet + message)
 
+=======
+            print("message is :", message)
+            print(type(self.encrypt_box))
+            encrypt_packet = self.box.encrypt(message)
+            self.data_packets.append(new_packet + encrypt_packet)
+>>>>>>> 2361f93e267a526579fc1f77460f8b0edd74d280
         return total_packets
 
     def send(self,buffer):
