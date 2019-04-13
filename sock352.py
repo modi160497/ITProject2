@@ -1,5 +1,4 @@
-
-# CS 352 project part 2 
+# CS 352 project part 2
 # this is the initial socket library for project 2 
 # You wil need to fill in the various methods in this
 # library 
@@ -42,41 +41,41 @@ global privateKeys
 # the encryption flag 
 global ENCRYPT
 
-publicKeysHex = {} 
-privateKeysHex = {} 
-publicKeys = {} 
+publicKeysHex = {}
+privateKeysHex = {}
+publicKeys = {}
 privateKeys = {}
 
 # this is 0xEC 
-ENCRYPT = 236 
+ENCRYPT = 236
 
 # this is the structure of the sock352 packet 
 PACKET_HEADER_FORMAT = "!BBBBHHLLQQLL"
 PACKET_HEADER_LENGTH = struct.calcsize(PACKET_HEADER_FORMAT)
 
-#Global variables that are responsible for storing the maximum packet size and the
-#maximum payload size
+# Global variables that are responsible for storing the maximum packet size and the
+# maximum payload size
 MAXIMUM_PACKET_SIZE = 64000
 MAXIMUM_PAYLOAD_SIZE = MAXIMUM_PACKET_SIZE - PACKET_HEADER_LENGTH
 
-#Global variables that define all the packet bits
+# Global variables that define all the packet bits
 SOCK352_SYN = 0x01
 SOCK352_FIN = 0x02
 SOCK352_ACK = 0x04
 SOCK352_RESET = 0x08
 SOCK352_HAS_OPT = 0x10
 
-#Global variables that store the index for the flag, sequence no. and ack no. within the packet header
+# Global variables that store the index for the flag, sequence no. and ack no. within the packet header
 PACKET_FLAG_INDEX = 1
 PACKET_SEQUENCE_NO_INDEX = 8
 PACKET_ACK_NO_INDEX = 9
 
-
-#String message to print out that a connection has been already established
+# String message to print out that a connection has been already established
 CONNECTION_ALREADY_ESTABLISHED_MESSAGE = "This socket supports a maximum of one connection\n" \
-                                 "And a connection is already established"
+                                         "And a connection is already established"
 
-def init(UDPportTx,UDPportRx):
+
+def init(UDPportTx, UDPportRx):
     global sock352portTx
     global sock352portRx
 
@@ -93,25 +92,26 @@ def init(UDPportTx,UDPportRx):
 
     # Assigns the global transmit and receive ports to be the one passed in through this method
     sock352portTx = int(UDPportTx)
-    sock352portRx= int(UDPportRx)
-    
+    sock352portRx = int(UDPportRx)
+
+
 # read the keyfile. The result should be a private key and a keychain of
 # public keys
 def readKeyChain(filename):
     global publicKeysHex
-    global privateKeysHex 
+    global privateKeysHex
     global publicKeys
-    global privateKeys 
-    
+    global privateKeys
+
     if (filename):
         try:
-            keyfile_fd = open(filename,"r")
+            keyfile_fd = open(filename, "r")
             for line in keyfile_fd:
                 words = line.split()
                 # check if a comment
                 # more than 2 words, and the first word does not have a
                 # hash, we may have a valid host/key pair in the keychain
-                if ( (len(words) >= 4) and (words[0].find("#") == -1)):
+                if ((len(words) >= 4) and (words[0].find("#") == -1)):
                     host = words[1]
                     print("host: " + str(host))
                     port = words[2]
@@ -121,25 +121,26 @@ def readKeyChain(filename):
                     print("key: " + keyInHex)
 
                     if (words[0] == "private"):
-                        privateKeysHex[(host,port)] = keyInHex
-                       # print("key is private: " + str(keyInHex))
-                        privateKeys[(host,port)] = nacl.public.PrivateKey(keyInHex, nacl.encoding.HexEncoder)
+                        privateKeysHex[(host, port)] = keyInHex
+                        # print("key is private: " + str(keyInHex))
+                        privateKeys[(host, port)] = nacl.public.PrivateKey(keyInHex, nacl.encoding.HexEncoder)
                     elif (words[0] == "public"):
-                        publicKeysHex[(host,port)] = keyInHex
-                        #print("key is public: " + str(keyInHex))
-                        publicKeys[(host,port)] = nacl.public.PublicKey(keyInHex, nacl.encoding.HexEncoder)
+                        publicKeysHex[(host, port)] = keyInHex
+                        # print("key is public: " + str(keyInHex))
+                        publicKeys[(host, port)] = nacl.public.PublicKey(keyInHex, nacl.encoding.HexEncoder)
         except Exception as e:
-            print ( "error: opening keychain file: %s %s" % (filename,repr(e)))
+            print("error: opening keychain file: %s %s" % (filename, repr(e)))
     else:
-            print ("error: No filename presented")             
+        print("error: No filename presented")
 
     print(publicKeysHex)
     print(privateKeysHex)
 
-    return (publicKeys,privateKeys)
+    return (publicKeys, privateKeys)
+
 
 class socket:
-    
+
     def __init__(self):
 
         # creates the socket
@@ -183,20 +184,20 @@ class socket:
 
         self.encrypt_box = None
 
-        return 
-        
-    def bind(self,address):
+        return
+
+    def bind(self, address):
         # bind is not used in this assignment
         self.socket.bind((address[0], sock352portRx))
         return
 
-    def connect(self,*args):
+    def connect(self, *args):
 
         # example code to parse an argument list (use option arguments if you want)
         global sock352portTx
         global ENCRYPT
-        if (len(args) >= 1): 
-            (host,port) = args[0]
+        if (len(args) >= 1):
+            (host, port) = args[0]
         if (len(args) >= 2):
             if (args[1] == ENCRYPT):
                 self.encrypt = True
@@ -220,8 +221,8 @@ class socket:
 
         # Step 1: Request to connect to the server by setting the SYN flag
 
-        #if encryption argument passed, set the option bit and syn flag
-        if(self.encrypt==True):
+        # if encryption argument passed, set the option bit and syn flag
+        if (self.encrypt == True):
             flags = SOCK352_SYN | SOCK352_HAS_OPT
         else:
             flags = SOCK352_SYN
@@ -270,18 +271,16 @@ class socket:
         # sets the connected boolean to be true
         self.is_connected = True
 
-        #after the client is connected, look up private key of client and public key of server
+        # after the client is connected, look up private key of client and public key of server
         port = str(self.send_address[1])
         host = str(self.send_address[0])
 
-
-        serverpublickey = publicKeys.get((host,port))
+        serverpublickey = publicKeys.get((host, port))
         print(serverpublickey)
-        clientprivatekey = privateKeys.get(("*","*"))
+        clientprivatekey = privateKeys.get(("*", "*"))
         print(clientprivatekey)
-        #print(serverpublickey)
-        #print(clientprivatekey)
-
+        # print(serverpublickey)
+        # print(clientprivatekey)
 
         self.encrypt_box = Box(clientprivatekey, serverpublickey)
 
@@ -289,12 +288,11 @@ class socket:
         self.socket.sendto(ack_packet, self.send_address)
         print("Client is now connected to the server at %s:%s" % (self.send_address[0], self.send_address[1]))
 
-    def listen(self,backlog):
-        # listen is not used in this assignments 
+    def listen(self, backlog):
+        # listen is not used in this assignments
         pass
-    
 
-    def accept(self,*args):
+    def accept(self, *args):
         # example code to parse an argument list (use option arguments if you want)
         global ENCRYPT
         if (len(args) >= 1):
@@ -329,14 +327,14 @@ class socket:
             # if the receive times out while receiving a SYN packet, it tries to listen again
             except syssock.timeout:
                 pass
-              
-        tup1=("localhost",str(addr[1]))
-        tup2=('*','*')
+
+        tup1 = ("localhost", str(addr[1]))
+        tup2 = ('*', '*')
 
         # Step 2: Send a SYN/ACK packet for the 3-way handshake
         # creates the flags bit to be the bit-wise OR of SYN/ACK
         flags = SOCK352_SYN | SOCK352_ACK
-        print("ack and syn flag:",bin(flags))
+        print("ack and syn flag:", bin(flags))
         # creates the SYN/ACK packet to ACK the connection request from client
         # and sends the SYN to establish the connection from this end
         syn_ack_packet = self.createPacket(flags=flags,
@@ -374,12 +372,12 @@ class socket:
         self.is_connected = True
 
         print("Server is now connected to the client at %s:%s" % (self.send_address[0], self.send_address[1]))
-        
-        if (self.encrypt == True ):
+
+        if (self.encrypt == True):
             print("server connection is encrypted")
             print("private key", privateKeys.get(tup2))
             print("public key", publicKeys.get(tup1))
-            self.encrypt_box =Box(privateKeys.get(tup2), publicKeys.get(tup1))
+            self.encrypt_box = Box(privateKeys.get(tup2), publicKeys.get(tup1))
 
         return self, addr
 
@@ -414,7 +412,7 @@ class socket:
     def create_data_packets(self, buffer):
 
         # calculates the total packets needed to transmit the entire buffer
-        total_packets = (int) (len(buffer) / MAXIMUM_PAYLOAD_SIZE)
+        total_packets = (int)(len(buffer) / MAXIMUM_PAYLOAD_SIZE)
 
         # if the length of the buffer is not divisible by the maximum payload size,
         # that means an extra packet will need to be sent to transmit the left over data
@@ -445,8 +443,8 @@ class socket:
             # attaches the payload length of buffer to the end of the header to finish constructing the packet
             message = buffer[MAXIMUM_PAYLOAD_SIZE * i: MAXIMUM_PAYLOAD_SIZE * i + payload_len]
 
-            #encrypt each packet if encryption is true
-            if(self.encrypt):
+            # encrypt each packet if encryption is true
+            if (self.encrypt):
                 print("message is :", message)
                 print(type(self.encrypt_box))
                 encrypt_packet = self.encrypt_box.encrypt(message)
@@ -456,7 +454,7 @@ class socket:
 
         return total_packets
 
-    def send(self,buffer):
+    def send(self, buffer):
         # makes sure that the file length is set and has been communicated to the receiver
         if self.file_len == -1:
             self.socket.sendto(buffer, self.send_address)
@@ -559,7 +557,7 @@ class socket:
                     self.can_close = True
                     return
 
-    def recv(self,nbytes):
+    def recv(self, nbytes):
         # if the file length has not been set, receive the file length from the sender
         if self.file_len == -1:
             file_size_packet = self.socket.recv(struct.calcsize("!L"))
@@ -588,7 +586,7 @@ class socket:
                 if str_received is not None:
                     # appends the data received to the total buffer of all the data received so far
                     print(type(str_received))
-                    data_received +=  str(str_received)
+                    data_received += str(str_received)
                     # decrements bytes to receive by the length of last data received since that many
                     # less bytes need to be transmitted now
                     bytes_to_receive -= len(str_received)
@@ -639,7 +637,7 @@ class socket:
         if self.encrypt == True:
             print(type(self.encrypt_box))
             packet_data = self.encrypt_box.decrypt(packet_data)
-            print("this is packet data: " , packet_data)
+            print("this is packet data: ", packet_data)
         # adds the payload data to the data packet array
         self.data_packets.append(packet_data)
         # increments the acknowledgement by 1 since it is supposed to be the next expected sequence number
@@ -655,9 +653,3 @@ class socket:
 
         # the data or the payload is then itself is returned from this method
         return packet_data
-
-
-
-    
-
-
