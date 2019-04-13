@@ -590,6 +590,8 @@ class socket:
                 # adjusts the numbers accordingly based on return value of manage data packet
                 if str_received is not None:
                     # appends the data received to the total buffer of all the data received so far
+                    if (self.encrypt == True):
+                        str_received = self.encrypt_box.decrypt(str_received)
                     data_received += str_received
                     # decrements bytes to receive by the length of last data received since that many
                     # less bytes need to be transmitted now
