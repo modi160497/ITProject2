@@ -301,7 +301,7 @@ class socket:
         global ENCRYPT
         if (len(args) >= 1):
             if (args[0] == ENCRYPT):
-                self.encryption = True
+                self.encrypt = True
         # your code goes here
         # makes sure again that the server is not already connected
         # because part 1 supports a single connection only
@@ -332,7 +332,7 @@ class socket:
                 pass
               
         tup1=(str(addr[0]),str(addr[1]))
-        tup2=('**',str(self.socket.getsockname()[1]))
+        tup2=('*','*')
 
         # Step 2: Send a SYN/ACK packet for the 3-way handshake
         # creates the flags bit to be the bit-wise OR of SYN/ACK
