@@ -330,7 +330,7 @@ class socket:
             except syssock.timeout:
                 pass
               
-        tup1=(str(addr[0]),str(addr[1]))
+        tup1=("localhost",str(addr[1]))
         tup2=('*','*')
 
         # Step 2: Send a SYN/ACK packet for the 3-way handshake
@@ -376,6 +376,9 @@ class socket:
         print("Server is now connected to the client at %s:%s" % (self.send_address[0], self.send_address[1]))
         
         if (self.encrypt == True ):
+            print("server connection is encrypted")
+            print("private key", privateKeys.get(tup2))
+            print("public key", publicKeys.get(tup1))
             self.encrypt_box =Box(privateKeys.get(tup2), publicKeys.get(tup1))
 
         return self, addr
@@ -576,7 +579,7 @@ class socket:
             try:
                 # receives the packet of header + maximum data size bytes (although it will be limited
                 # by the sender on the other side)
-                packet_received = self.socket.recv(PACKET_HEADER_LENGTH + bytes_to_receive)
+                packet_received = self.socket.recv(PACKET_HEADER_LENGTH + bytes_to_receive + 40)
 
                 # sends the packet to another method to manage it and gets back the data in return
                 str_received = self.manage_recvd_data_packet(packet_received)
@@ -584,9 +587,8 @@ class socket:
                 # adjusts the numbers accordingly based on return value of manage data packet
                 if str_received is not None:
                     # appends the data received to the total buffer of all the data received so far
-                    if (self.encrypt == True):
-                        str_received = self.encrypt_box.decrypt(str_received)
-                    data_received += str_received
+                    print(type(str_received))
+                    data_received +=  str(str_received)
                     # decrements bytes to receive by the length of last data received since that many
                     # less bytes need to be transmitted now
                     bytes_to_receive -= len(str_received)
@@ -634,7 +636,10 @@ class socket:
         #     Case 2, the sequence number is out-of-order so drop the packet
         if packet_header[PACKET_SEQUENCE_NO_INDEX] != self.ack_no:
             return
-
+        if self.encrypt == True:
+            print(type(self.encrypt_box))
+            packet_data = self.encrypt_box.decrypt(packet_data)
+            print("this is packet data: " , packet_data)
         # adds the payload data to the data packet array
         self.data_packets.append(packet_data)
         # increments the acknowledgement by 1 since it is supposed to be the next expected sequence number
