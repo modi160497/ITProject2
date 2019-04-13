@@ -275,8 +275,12 @@ class socket:
         #after the client is connected, look up private key of client and public key of server
         port = str(self.send_address[1])
         host = self.send_address[0]
+
+
         serverpublickey = publicKeys.get((host,port))
+        print(serverpublickey)
         clientprivatekey = privateKeys.get(("*","*"))
+        print(clientprivatekey)
         #print(serverpublickey)
         #print(clientprivatekey)
 
@@ -440,6 +444,7 @@ class socket:
             #encrypt each packet
             message = buffer[MAXIMUM_PAYLOAD_SIZE * i: MAXIMUM_PAYLOAD_SIZE * i + payload_len]
             print("message is :", message)
+            print(type(self.encrypt_box))
             encrypt_packet = self.encrypt_box.encrypt(message)
             self.data_packets.append(new_packet + encrypt_packet)
         return total_packets
