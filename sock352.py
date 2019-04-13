@@ -445,7 +445,7 @@ class socket:
             message = buffer[MAXIMUM_PAYLOAD_SIZE * i: MAXIMUM_PAYLOAD_SIZE * i + payload_len]
             print("message is :", message)
             print(type(self.encrypt_box))
-            encrypt_packet = self.encrypt_box.encrypt(message)
+            encrypt_packet = self.box.encrypt(message)
             self.data_packets.append(new_packet + encrypt_packet)
         return total_packets
 
