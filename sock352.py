@@ -180,8 +180,10 @@ class socket:
         # declares the last packet that was acked (for the sender only)
         self.last_data_packet_acked = None
 
+        #create an encrypt checking flag. equals true when encrypt passed as argument
         self.encrypt = False
 
+        #create a Box field, later to be initialized within connnect and accept
         self.encrypt_box = None
 
         return
@@ -272,17 +274,26 @@ class socket:
         self.is_connected = True
 
         # after the client is connected, look up private key of client and public key of server
-        port = str(self.send_address[1])
-        host = str(self.send_address[0])
 
-        serverpublickey = publicKeys.get((host, port))
-        print(serverpublickey)
-        clientprivatekey = privateKeys.get(("*", "*"))
-        print(clientprivatekey)
-        # print(serverpublickey)
-        # print(clientprivatekey)
+        if(self.encrypt==True):
+            #get host and port for public key look up from address passed into argument
+            serverhost = str(self.send_address[0])
+            serverport = str(self.send_address[1])
 
-        self.encrypt_box = Box(clientprivatekey, serverpublickey)
+            serverpublickey = publicKeys.get((serverhost, serverport))
+            print(serverpublickey)
+
+            #get port for the private key
+            clienthost = "*"
+            clientport = str(sock352portTx)
+
+            clientprivatekey = privateKeys.get((clienthost, clientport))
+            print(clientprivatekey)
+            # print(serverpublickey)
+            # print(clientprivatekey)
+
+            #create a box to encrypt the message using client's private key and server's public key
+            self.encrypt_box = Box(clientprivatekey, serverpublickey)
 
         # sends the ack packet to the server, as it assumes it's connected now
         self.socket.sendto(ack_packet, self.send_address)
@@ -328,9 +339,6 @@ class socket:
             except syssock.timeout:
                 pass
 
-        tup1 = ("localhost", str(addr[1]))
-        tup2 = ('*', '*')
-
         # Step 2: Send a SYN/ACK packet for the 3-way handshake
         # creates the flags bit to be the bit-wise OR of SYN/ACK
         flags = SOCK352_SYN | SOCK352_ACK
@@ -374,10 +382,25 @@ class socket:
         print("Server is now connected to the client at %s:%s" % (self.send_address[0], self.send_address[1]))
 
         if (self.encrypt == True):
-            print("server connection is encrypted")
-            print("private key", privateKeys.get(tup2))
-            print("public key", publicKeys.get(tup1))
-            self.encrypt_box = Box(privateKeys.get(tup2), publicKeys.get(tup1))
+
+            # get port for the private key, which is UDPTx
+            serverhost = "*"
+            serverport = str(sock352portTx)
+
+            serverprivatekey = privateKeys.get((serverhost, serverport))
+            print(serverprivatekey)
+
+            # get host and port for public key look up from address passed into argument
+            clienthost = str(addr[0])
+            clientport = str(sock352portTx)
+
+            clientpublickey = publicKeys.get((clienthost, clientport))
+            print(clientpublickey)
+            # print(serverpublickey)
+            # print(clientprivatekey)
+
+
+            self.encrypt_box = Box(serverprivatekey, clientpublickey)
 
         return self, addr
 
