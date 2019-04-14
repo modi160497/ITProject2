@@ -128,6 +128,7 @@ def readKeyChain(filename):
                         publicKeysHex[(host, port)] = keyInHex
                         # print("key is public: " + str(keyInHex))
                         publicKeys[(host, port)] = nacl.public.PublicKey(keyInHex, nacl.encoding.HexEncoder)
+
         except Exception as e:
             print("error: opening keychain file: %s %s" % (filename, repr(e)))
     else:
@@ -276,21 +277,51 @@ class socket:
         # after the client is connected, look up private key of client and public key of server
 
         if(self.encrypt==True):
+
             #get host and port for public key look up from address passed into argument
             serverhost = str(self.send_address[0])
             serverport = str(self.send_address[1])
 
-            serverpublickey = publicKeys.get((serverhost, serverport))
+            #if the host is not found, use "*", port
+            #if the port is not found, use host,"*"
+            #if host and port are not found, use "*","*"
+
+            if( (publicKeys.get( (serverhost, serverport)) !=None)):
+                serverpublickey = publicKeys.get((serverhost, serverport))
+
+            elif( (publicKeys.get( ("*", serverport) ) !=None)):
+                serverpublickey  = publicKeys.get( ("*", serverport) )
+
+            elif ((publicKeys.get((serverhost, "*")) != None)):
+                serverpublickey = publicKeys.get( (serverhost, "*"))
+
+            elif ((publicKeys.get(("*", "*")) != None)):
+                serverpublickey = publicKeys.get(("*", "*"))
+
             print(serverpublickey)
 
-            #get port for the private key
-            clienthost = "*"
+            #get port for the private key. use localhost for the host
+            clienthost = "localhost"
             clientport = str(sock352portTx)
 
-            clientprivatekey = privateKeys.get((clienthost, clientport))
+            # if the host is not found, use "*", port
+            # if the port is not found, use host,"*"
+            # if host and port are not found, use "*","*"
+            if ((privateKeys.get((clienthost, clientport)) != None)):
+                clientprivatekey = privateKeys.get((clienthost, clientport))
+
+            elif ((privateKeys.get(("*", clientport)) != None)):
+                clientprivatekey = privateKeys.get(("*", clientport))
+
+            elif ((privateKeys.get((clienthost, "*")) != None)):
+                clientprivatekey = privateKeys.get((clienthost, "*"))
+
+            elif ((privateKeys.get(("*", "*")) != None)):
+                clientprivatekey = privateKeys.get(("*", "*"))
+
+
             print(clientprivatekey)
-            # print(serverpublickey)
-            # print(clientprivatekey)
+
 
             #create a box to encrypt the message using client's private key and server's public key
             self.encrypt_box = Box(clientprivatekey, serverpublickey)
@@ -327,12 +358,14 @@ class socket:
                 syn_packet = struct.unpack(PACKET_HEADER_FORMAT, syn_packet)
 
                 # if the received packet is not a SYN packet, it ignores the packet
+                # treat the connection as encrypted only when both the argument is passed as ENCRYPT
+                # and option bit is in the packet, otherwise connection is not encrypted
                 if (syn_packet[PACKET_FLAG_INDEX] == SOCK352_SYN):
                     got_connection_request = True
                     self.encrypt = False
+
                 if (syn_packet[PACKET_FLAG_INDEX] == SOCK352_SYN | SOCK352_HAS_OPT):
                     got_connection_request = True
-                    self.encrypt = True
 
 
             # if the receive times out while receiving a SYN packet, it tries to listen again
@@ -601,7 +634,7 @@ class socket:
                 # receives the packet of header + maximum data size bytes (although it will be limited
                 # by the sender on the other side)
                 if(self.encrypt):
-                    #add 40 bytes for the encryption information 
+                    #add 40 bytes for the encryption information
                     packet_received = self.socket.recv(PACKET_HEADER_LENGTH + bytes_to_receive + 40)
                 else:
                     packet_received = self.socket.recv(PACKET_HEADER_LENGTH + bytes_to_receive)
