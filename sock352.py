@@ -285,7 +285,8 @@ class socket:
             #if the host is not found, use "*", port
             #if the port is not found, use host,"*"
             #if host and port are not found, use "*","*"
-
+            #else,key not found, exit program
+            
             if( (publicKeys.get( (serverhost, serverport)) !=None)):
                 serverpublickey = publicKeys.get((serverhost, serverport))
 
@@ -298,6 +299,10 @@ class socket:
             elif ((publicKeys.get(("*", "*")) != None)):
                 serverpublickey = publicKeys.get(("*", "*"))
 
+            else:
+                print("server public key not found")
+                exit(1)
+
             print(serverpublickey)
 
             #get port for the private key. use localhost for the host
@@ -307,6 +312,7 @@ class socket:
             # if the host is not found, use "*", port
             # if the port is not found, use host,"*"
             # if host and port are not found, use "*","*"
+            #else key not found, exit program
             if ((privateKeys.get((clienthost, clientport)) != None)):
                 clientprivatekey = privateKeys.get((clienthost, clientport))
 
@@ -319,6 +325,9 @@ class socket:
             elif ((privateKeys.get(("*", "*")) != None)):
                 clientprivatekey = privateKeys.get(("*", "*"))
 
+            else:
+                print("client private key not found")
+                exit(1)
 
             print(clientprivatekey)
 
