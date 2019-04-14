@@ -286,7 +286,7 @@ class socket:
             #if the port is not found, use host,"*"
             #if host and port are not found, use "*","*"
             #else,key not found, exit program
-            
+
             if( (publicKeys.get( (serverhost, serverport)) !=None)):
                 serverpublickey = publicKeys.get((serverhost, serverport))
 
@@ -426,7 +426,7 @@ class socket:
         if (self.encrypt == True):
 
             # get port for the private key, which is UDPTx
-            serverhost = "*"
+            serverhost = "localhost"
             serverport = str(sock352portTx)
 
             serverprivatekey = privateKeys.get((serverhost, serverport))
