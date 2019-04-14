@@ -399,7 +399,7 @@ class socket:
             # print(serverpublickey)
             # print(clientprivatekey)
 
-
+            #create a box to decrypt later
             self.encrypt_box = Box(serverprivatekey, clientpublickey)
 
         return self, addr
@@ -600,7 +600,11 @@ class socket:
             try:
                 # receives the packet of header + maximum data size bytes (although it will be limited
                 # by the sender on the other side)
-                packet_received = self.socket.recv(PACKET_HEADER_LENGTH + bytes_to_receive + 40)
+                if(self.encrypt):
+                    #add 40 bytes for the encryption information 
+                    packet_received = self.socket.recv(PACKET_HEADER_LENGTH + bytes_to_receive + 40)
+                else:
+                    packet_received = self.socket.recv(PACKET_HEADER_LENGTH + bytes_to_receive)
 
                 # sends the packet to another method to manage it and gets back the data in return
                 str_received = self.manage_recvd_data_packet(packet_received)
