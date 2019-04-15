@@ -113,12 +113,12 @@ def readKeyChain(filename):
                 # hash, we may have a valid host/key pair in the keychain
                 if ((len(words) >= 4) and (words[0].find("#") == -1)):
                     host = words[1]
-                    print("host: " + str(host))
+                    #print("host: " + str(host))
                     port = words[2]
-                    print("port: " + str(port))
+                    #print("port: " + str(port))
 
                     keyInHex = words[3]
-                    print("key: " + keyInHex)
+                    #print("key: " + keyInHex)
 
                     if (words[0] == "private"):
                         privateKeysHex[(host, port)] = keyInHex
@@ -134,8 +134,8 @@ def readKeyChain(filename):
     else:
         print("error: No filename presented")
 
-    print(publicKeysHex)
-    print(privateKeysHex)
+    #print(publicKeysHex)
+    #print(privateKeysHex)
 
     return (publicKeys, privateKeys)
 
@@ -303,15 +303,16 @@ class socket:
                 print("server public key not found")
                 exit(1)
 
-            print(serverpublickey)
+            #print(serverpublickey)
 
-            #get port for the private key. use localhost for the host
-            clienthost = "localhost"
+            #get port for the private key. use destination for the host
+            clienthost = str(self.send_address[0])
             clientport = str(sock352portTx)
 
             # if the host is not found, use "*", port
             # if the port is not found, use host,"*"
             # if host and port are not found, use "*","*"
+            # also check for localhost as host
             #else key not found, exit program
             if ((privateKeys.get((clienthost, clientport)) != None)):
                 clientprivatekey = privateKeys.get((clienthost, clientport))
@@ -322,6 +323,12 @@ class socket:
             elif ((privateKeys.get((clienthost, "*")) != None)):
                 clientprivatekey = privateKeys.get((clienthost, "*"))
 
+            elif ((privateKeys.get(("localhist", clientport)) != None)):
+                clientprivatekey = privateKeys.get(("localhost", clientport))
+
+            elif ((privateKeys.get(("localhost", "*")) != None)):
+                clientprivatekey = privateKeys.get(("localhost", "*"))
+
             elif ((privateKeys.get(("*", "*")) != None)):
                 clientprivatekey = privateKeys.get(("*", "*"))
 
@@ -329,7 +336,7 @@ class socket:
                 print("client private key not found")
                 exit(1)
 
-            print(clientprivatekey)
+            #print(clientprivatekey)
 
 
             #create a box to encrypt the message using client's private key and server's public key
@@ -356,7 +363,7 @@ class socket:
             print(CONNECTION_ALREADY_ESTABLISHED_MESSAGE)
             return
 
-        print("host name is: ", self.socket.getsockname())
+        #print("host name is: ", self.socket.getsockname())
 
         # Keeps trying to receive the request to connect from a potential client until we get a connection request
         got_connection_request = False
@@ -384,7 +391,7 @@ class socket:
         # Step 2: Send a SYN/ACK packet for the 3-way handshake
         # creates the flags bit to be the bit-wise OR of SYN/ACK
         flags = SOCK352_SYN | SOCK352_ACK
-        print("ack and syn flag:", bin(flags))
+        #print("ack and syn flag:", bin(flags))
         # creates the SYN/ACK packet to ACK the connection request from client
         # and sends the SYN to establish the connection from this end
         syn_ack_packet = self.createPacket(flags=flags,
@@ -426,16 +433,23 @@ class socket:
         if (self.encrypt == True):
 
             # get port for the private key, which is UDPTx
-            serverhost = "localhost"
+            serverhost = str(addr[0])
             serverport = str(sock352portTx)
 
             # if the host is not found, use "*", port
             # if the port is not found, use host,"*"
             # if host and port are not found, use "*","*"
+            # also check for localhost
             # else,key not found, exit program
 
             if ((privateKeys.get((serverhost, serverport)) != None)):
                 serverprivatekey = privateKeys.get((serverhost, serverport))
+
+            elif ((privateKeys.get(("localhost", serverport)) != None)):
+                serverprivatekey = privateKeys.get(("localhost", serverport))
+
+            elif ((privateKeys.get(("localhost", "*")) != None)):
+                serverprivatekey = privateKeys.get(("localhost", "*"))
 
             elif ((privateKeys.get(("*", serverport)) != None)):
                 serverprivatekey = privateKeys.get(("*", serverport))
@@ -450,7 +464,7 @@ class socket:
                 print("server private key not found")
                 exit(1)
 
-            print("server private key is: ", str(serverprivatekey))
+            #print("server private key is: ", str(serverprivatekey))
 
             # get host and port for public key look up from address passed into argument
             clienthost = str(addr[0])
@@ -484,7 +498,7 @@ class socket:
                 print("client public key not found")
                 exit(1)
 
-            print("client public key is: " , str(clientpublickey))
+            #print("client public key is: " , str(clientpublickey))
             # print(serverpublickey)
             # print(clientprivatekey)
 
@@ -557,8 +571,8 @@ class socket:
 
             # encrypt each packet if encryption is true
             if (self.encrypt):
-                print("message is :", message)
-                print(type(self.encrypt_box))
+                #print("message is :", message)
+                #print(type(self.encrypt_box))
                 encrypt_packet = self.encrypt_box.encrypt(message)
                 self.data_packets.append(new_packet + encrypt_packet)
             else:
@@ -751,9 +765,9 @@ class socket:
         if packet_header[PACKET_SEQUENCE_NO_INDEX] != self.ack_no:
             return
         if self.encrypt == True:
-            print(type(self.encrypt_box))
+            #print(type(self.encrypt_box))
             packet_data = self.encrypt_box.decrypt(packet_data)
-            print("this is packet data: ", packet_data)
+            #print("this is packet data: ", packet_data)
         # adds the payload data to the data packet array
         self.data_packets.append(packet_data)
         # increments the acknowledgement by 1 since it is supposed to be the next expected sequence number
