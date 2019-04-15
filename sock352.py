@@ -429,15 +429,62 @@ class socket:
             serverhost = "localhost"
             serverport = str(sock352portTx)
 
-            serverprivatekey = privateKeys.get((serverhost, serverport))
-            print(serverprivatekey)
+            # if the host is not found, use "*", port
+            # if the port is not found, use host,"*"
+            # if host and port are not found, use "*","*"
+            # else,key not found, exit program
+
+            if ((privateKeys.get((serverhost, serverport)) != None)):
+                serverprivatekey = privateKeys.get((serverhost, serverport))
+
+            elif ((privateKeys.get(("*", serverport)) != None)):
+                serverprivatekey = privateKeys.get(("*", serverport))
+
+            elif ((privateKeys.get((serverhost, "*")) != None)):
+                serverprivatekey = privateKeys.get((serverhost, "*"))
+
+            elif ((privateKeys.get(("*", "*")) != None)):
+                serverprivatekey = privateKeys.get(("*", "*"))
+
+            else:
+                print("server private key not found")
+                exit(1)
+
+            print("server private key is: ", str(serverprivatekey))
 
             # get host and port for public key look up from address passed into argument
             clienthost = str(addr[0])
             clientport = str(sock352portTx)
 
-            clientpublickey = publicKeys.get((clienthost, clientport))
-            print(clientpublickey)
+            # if host is not found, first try at localhost because localhost address is sometimes
+            # converted to a numeric addresss
+            # if the host is not found, use "*", port
+            # if the port is not found, use host,"*"
+            # if host and port are not found, use "*","*"
+            # else key not found, exit program
+            if ((publicKeys.get((clienthost, clientport)) != None)):
+                clientpublickey = publicKeys.get((clienthost, clientport))
+
+            elif ((publicKeys.get(("localhost", clientport)) != None)):
+                clientpublickey = publicKeys.get(("localhost", clientport))
+
+            elif ((publicKeys.get(("localhost", "*")) != None)):
+                clientpublickey = publicKeys.get(("localhost", clientport))
+
+            elif ((publicKeys.get(("*", clientport)) != None)):
+                clientpublickey = publicKeys.get(("*", clientport))
+
+            elif ((publicKeys.get((clienthost, "*")) != None)):
+                clientpublickey = publicKeys.get((clienthost, "*"))
+
+            elif ((publicKeys.get(("*", "*")) != None)):
+                clientpublickey = publicKeys.get(("*", "*"))
+
+            else:
+                print("client public key not found")
+                exit(1)
+
+            print("client public key is: " , str(clientpublickey))
             # print(serverpublickey)
             # print(clientprivatekey)
 
